@@ -21,8 +21,8 @@ gpsSelector = st.sidebar.selectbox(
 gpsSite = gpsSelector.split(':')[0]
 gpsNo = gpsSelector.split(':')[1].replace(' ', '')
 
-url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/Data/' + gpsSite + "_" + gpsNo + ".csv"
-url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/data/schafberg/SCHAFBERG_GPS0.csv'
+url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/Data/' + gpsSite + "/" + gpsSite + "_" + gpsNo + ".csv"
+
 df = pd.read_csv(url, sep = ';')
 # convert date to datetime format
 df['Date'] = pd.to_datetime(df['Date'])
