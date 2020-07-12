@@ -45,10 +45,14 @@ url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/Data/'
 df = pd.read_csv(url, sep = ';')
 # convert date to datetime format
 df['Date'] = pd.to_datetime(df['Date'])
+latestUpdate = max(df['Date'])
+latestUpdate = latestUpdate.date().strftime('%d.%m.%Y')
+
 df['DateString'] = df['Date'].dt.strftime('%d.%m.%Y')
 
 st.title('Geomon GPS Network')
 st.header(str(gpsSite) + ": " + gpsNo)
+st.subheader("Latest update: " + latestUpdate)
 
 st.subheader('Easting')
 scatter_chart = st.altair_chart(
