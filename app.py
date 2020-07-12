@@ -13,6 +13,7 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
+st.sidebar.title('Site Selection')
 gpsSelector = st.sidebar.radio(
     "Select site and GPS device",
     ("Grueebu: GPS 1",
@@ -54,11 +55,21 @@ st.title('Geomon GPS Network')
 st.header(str(gpsSite) + ": " + gpsNo)
 st.subheader("Latest update: " + latestUpdate)
 
+st.sidebar.subheader('Plot options')
+start_date = st.sidebar.date_input('Start date', min(df['Date']) - pd.Timedelta(days=5))
+end_date = st.sidebar.date_input('End date', max(df['Date'])+ pd.Timedelta(days=5))
+
+
+markerSize = st.sidebar.slider(
+    'Set marker size',
+    10, 200, (60))
+
+
 st.subheader('Easting')
 scatter_chart = st.altair_chart(
     alt.Chart(df)
-        .mark_circle(size=60, color = 'steelblue')
-        .encode(alt.X('Date:T'),
+        .mark_circle(size=markerSize, color = 'steelblue')
+        .encode(alt.X('Date:T', scale=alt.Scale(domain=(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))),
                 alt.Y('Easting:Q', scale=alt.Scale(zero=False), title='Easting [m]'),
                 tooltip=['DateString', 'Easting'])
         .properties(
@@ -70,8 +81,8 @@ scatter_chart = st.altair_chart(
 st.subheader('Northing')
 scatter_chart = st.altair_chart(
     alt.Chart(df)
-        .mark_circle(size=60, color = 'seagreen')
-        .encode(alt.X('Date:T'),
+        .mark_circle(size=markerSize, color = 'seagreen')
+        .encode(alt.X('Date:T', scale=alt.Scale(domain=(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))),
                 alt.Y('Northing:Q', scale=alt.Scale(zero=False), title='Northing [m]'),
                 tooltip=['DateString', 'Northing'])
         .properties(
@@ -83,8 +94,8 @@ st.subheader('Elevation')
 
 scatter_chart = st.altair_chart(
     alt.Chart(df)
-        .mark_circle(size=60, color = 'brown')
-        .encode(alt.X('Date:T'),
+        .mark_circle(size=markerSize, color = 'brown')
+        .encode(alt.X('Date:T', scale=alt.Scale(domain=(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))),
                 alt.Y('Elevation:Q', scale=alt.Scale(zero=False), title='Elevation [m a.s.l.]'),
                 tooltip=['DateString', 'Elevation'])
         .properties(
@@ -100,4 +111,3 @@ hide_streamlit_style = """
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
