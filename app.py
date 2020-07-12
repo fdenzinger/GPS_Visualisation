@@ -13,7 +13,7 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
-gpsSelector = st.sidebar.selectbox(
+gpsSelector = st.sidebar.radio(
     "Choose site and GPS device",
     ("Schafberg: GPS 0", "Schafberg: GPS 4", "Schafberg: GPS 6", "Schafberg: GPS 8")
 )
@@ -29,10 +29,7 @@ df['Date'] = pd.to_datetime(df['Date'])
 df['DateString'] = df['Date'].dt.strftime('%d.%m.%Y')
 
 st.title('Geomon GPS Network')
-st.header("Schafberg GR")
-
-st.markdown("### The Application")
-st.markdown("This application shows example data from GEOMON devices")
+st.header(str(gpsSite) + ": " + gpsNo)
 
 st.subheader('Easting')
 scatter_chart = st.altair_chart(
