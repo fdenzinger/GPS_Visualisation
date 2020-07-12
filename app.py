@@ -14,7 +14,7 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 gpsSelector = st.sidebar.radio(
-    "Choose site and GPS device",
+    "Select site and GPS device",
     ("Grueebu: GPS 1",
      "Grueebu: GPS 3",
      "Grueebu: GPS 4",
