@@ -13,7 +13,15 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
+gpsSelector = st.sidebar.selectbox(
+    "Choose site and GPS device",
+    ("Schafberg: GPS 0", "Schafberg: GPS 4", "Schafberg: GPS 6", "Schafberg: GPS 8")
+)
 
+gpsSite = gpsSelector.split(':')[0]
+gpsNo = gpsSelector.split(':')[1].replace(' ', '')
+
+url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/data/' + gpsSite + "_" + gpsNo + ".csv"
 url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/data/schafberg/SCHAFBERG_GPS0.csv'
 df = pd.read_csv(url, sep = ';')
 # convert date to datetime format
@@ -25,11 +33,6 @@ st.header("Schafberg GR")
 
 st.markdown("### The Application")
 st.markdown("This application shows example data from GEOMON devices")
-
-add_selectbox = st.sidebar.selectbox(
-    "Choose GPS device",
-    ("GPS 0", "GPS 4", "GPS 6", "GPS 8")
-)
 
 st.subheader('Easting')
 scatter_chart = st.altair_chart(
