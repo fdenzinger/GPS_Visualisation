@@ -15,7 +15,26 @@ else:
 
 gpsSelector = st.sidebar.radio(
     "Choose site and GPS device",
-    ("Schafberg: GPS 0", "Schafberg: GPS 4", "Schafberg: GPS 6", "Schafberg: GPS 8")
+    ("Grueebu: GPS 1",
+     "Grueebu: GPS 3",
+     "Grueebu: GPS 4",
+     "Grueebu: GPS 7",
+     "Hohberg: GPS 1",
+     "Hohberg: GPS 2",
+     "Hohberg: GPS 4",
+     "Hohberg: GPS 5",
+     "Hohberg: GPS 6",
+     "Hohberg: GPS 8",
+     "Hohberg: GPS 9",
+     "Schafberg: GPS 0",
+     "Schafberg: GPS 4",
+     "Schafberg: GPS 6",
+     "Schafberg: GPS 8",
+     "Seewjine: GPS 3",
+     "Seewjine: GPS 5",
+     "Seewjine: GPS 6",
+     "Seewjine: GPS 7",
+     "Seewjine: GPS 8")
 )
 
 gpsSite = gpsSelector.split(':')[0]
