@@ -94,7 +94,7 @@ st.title('Geomon GPS Network')
 st.header(str(gpsSite) + ": " + gpsNo)
 st.subheader("Latest update: " + latestUpdate)
 
-if st.sidebar.button('Download source data as CSV'):
+if st.sidebar.button('Download raw data as CSV'):
     tmp_download_link = download_link(df, "Data_" + gpsSite + "_" + gpsNo + ".csv", 'Click here to download your data!')
     st.sidebar.markdown(tmp_download_link, unsafe_allow_html=True)
 
