@@ -1,2 +1,2 @@
 
-web: sh setup.sh && streamlit run -server.enableCORS false app.py -
+web: sh setup.sh && streamlit run --server.enableCORS false app.py -
