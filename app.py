@@ -84,8 +84,8 @@ def main():
     gpsNo = gpsSelector.split(':')[1].replace(' ', '')
 
 
-    url = 'https://raw.githubusercontent.com/bafu-DF/GPS_Visualisation/master/Data/' + gpsSite + "/" + gpsSite + "_" + gpsNo + ".csv"
-    df = pd.read_csv(url, sep = ';')
+    url = 'https://raw.githubusercontent.com/bafu-DF/geomondata/master/Geomon_' + gpsSite + "_" + gpsNo + ".csv"
+    df = pd.read_csv(url, sep = ',')
     # convert date to datetime format
     df['Date'] = pd.to_datetime(df['Date'])
     df['DateString'] = df['Date'].dt.strftime('%d.%m.%Y')
