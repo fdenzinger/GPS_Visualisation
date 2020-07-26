@@ -5,6 +5,7 @@ import ssl
 import altair as alt
 import datetime
 import base64
+import pydeck as pdk
 
 # get rid of ssl connection error (certificates)
 try:
@@ -89,6 +90,7 @@ def main():
     # convert date to datetime format
     df['Date'] = pd.to_datetime(df['Date'])
     df['DateString'] = df['Date'].dt.strftime('%d.%m.%Y')
+    df.columns = ['Date', 'Easting', 'Northing', 'Elevation', 'longitude', 'latitude', 'VBat', 'DateString']
     latestUpdate = max(df['Date'])
     latestUpdate = latestUpdate.date().strftime('%d.%m.%Y')
 
@@ -96,6 +98,28 @@ def main():
     if st.sidebar.button('Download raw data as CSV'):
         tmp_download_link = download_link(df, "Data_" + gpsSite + "_" + gpsNo + ".csv", 'Click here to download your data!')
         st.sidebar.markdown(tmp_download_link, unsafe_allow_html=True)
+
+    if st.sidebar.checkbox('Show Overview Map'):
+        st.sidebar.subheader('Overview map')
+        st.sidebar.pydeck_chart(pdk.Deck(
+            map_style='mapbox://styles/mapbox/satellite-streets-v11',
+            initial_view_state=pdk.ViewState(
+                latitude=np.mean(df['latitude']),
+                longitude=np.mean(df['longitude']),
+                zoom=14,
+            ),
+            layers=[
+                pdk.Layer(
+                    'ScatterplotLayer',
+                    data=df,
+                    get_position='[longitude, latitude]',
+                    get_color='[200, 30, 0, 160]',
+                    get_radius=20,
+                ),
+            ],
+        ))
+
+
     st.sidebar.subheader('Plot options')
     start_date = st.sidebar.date_input('Start date', min(df['Date']) - pd.Timedelta(days=5))
     end_date = st.sidebar.date_input('End date', max(df['Date'])+ pd.Timedelta(days=5))
@@ -151,6 +175,23 @@ def main():
             .encode(alt.X('Date:T', scale=alt.Scale(domain=(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))),
                     alt.Y('Elevation:Q', scale=alt.Scale(zero=False), title='Elevation [m a.s.l.]'),
                     tooltip=[alt.Tooltip('DateString', title='Date'), 'Elevation'])
+            .configure_axis(
+            labelFontSize=12,
+            titleFontSize=14
+            )
+            .properties(
+                width=800,
+                height=250)
+            .interactive()
+    )
+
+    st.subheader('Battery status')
+    scatter_chart = st.altair_chart(
+        alt.Chart(df)
+            .mark_line(size=2, color = 'grey')
+            .encode(alt.X('Date:T', scale=alt.Scale(domain=(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')))),
+                    alt.Y('VBat:Q', scale=alt.Scale(zero=False), title='Battery Voltage'),
+                    tooltip=[alt.Tooltip('DateString', title='Date'), 'VBat'])
             .configure_axis(
             labelFontSize=12,
             titleFontSize=14
