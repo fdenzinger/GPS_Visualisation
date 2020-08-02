@@ -149,7 +149,7 @@ def main():
                 width=800,
                 height=250)
             .interactive()
-    )
+    , use_container_width= True)
 
     st.subheader('Northing')
     scatter_chart = st.altair_chart(
@@ -166,7 +166,7 @@ def main():
                 width=800,
                 height=250)
             .interactive()
-    )
+    , use_container_width= True)
 
     st.subheader('Elevation')
     scatter_chart = st.altair_chart(
@@ -183,7 +183,7 @@ def main():
                 width=800,
                 height=250)
             .interactive()
-    )
+    , use_container_width= True)
 
     st.subheader('Battery status')
     scatter_chart = st.altair_chart(
@@ -200,7 +200,11 @@ def main():
                 width=800,
                 height=250)
             .interactive()
-    )
+    ,  use_container_width= True)
+
+    st.sidebar.markdown('This app is **in a development/prototyping  stage**.')
+    st.sidebar.markdown('For questions and suggestions: <a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>', unsafe_allow_html=True)
+    st.sidebar.markdown('© FD, 2020.')
 
     # hide hamburger and footer
     hide_streamlit_style = """
@@ -210,6 +214,7 @@ def main():
                 </style>
                 """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
