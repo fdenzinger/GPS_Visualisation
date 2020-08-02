@@ -202,9 +202,10 @@ def main():
             .interactive()
     ,  use_container_width= True)
 
-    st.sidebar.markdown('This app is **in a development/prototyping  stage**.')
+    st.sidebar.markdown('This app is **in a developing/prototyping  stage**.')
     st.sidebar.markdown('For questions and suggestions: <a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>', unsafe_allow_html=True)
-    st.sidebar.markdown('© FD, 2020.')
+    st.sidebar.markdown('Data and GPS models from <a href = "http://www.infrasurvey.ch/geomon/index.php/produits/?lang=en">InfraSurvey</a>', unsafe_allow_html=True)
+    st.sidebar.markdown('Webapp developed by FD, 2020')
 
     # hide hamburger and footer
     hide_streamlit_style = """
