@@ -30,6 +30,7 @@ else:
 #        st.error("the password you entered is incorrect")
 #else:
 #    main()
+@st.cache
 
 def download_link(object_to_download, download_filename, download_link_text):
     """
@@ -51,6 +52,23 @@ def download_link(object_to_download, download_filename, download_link_text):
     b64 = base64.b64encode(object_to_download.encode()).decode()
 
     return f'<a href="data:file/txt;base64,{b64}" download="{download_filename}">{download_link_text}</a>'
+
+def hampel(vals_orig, k=7, t0=3):
+    '''
+    vals: pandas series of values from which to remove outliers
+    k: size of window (including the sample; 7 is equal to 3 on either side of value)
+    '''
+    # Make copy so original not edited
+    vals = vals_orig.copy()
+    # Hampel Filter
+    L = 1.4826
+    rolling_median = vals.rolling(k).median()
+    difference = np.abs(rolling_median - vals)
+    median_abs_deviation = difference.rolling(k).median()
+    threshold = t0 * L * median_abs_deviation
+    outlier_idx = difference > threshold
+    vals[outlier_idx] = "null"
+    return (vals)
 
 def main():
     # create selection box in sidebar with stations to choose from
@@ -91,8 +109,12 @@ def main():
     df['Date'] = pd.to_datetime(df['Date'])
     df['DateString'] = df['Date'].dt.strftime('%d.%m.%Y')
     df.columns = ['Date', 'Easting', 'Northing', 'Elevation', 'longitude', 'latitude', 'VBat', 'DateString']
-    latestUpdate = max(df['Date'])
+    latestUpdate = df['Date'].iloc[-1]
     latestUpdate = latestUpdate.date().strftime('%d.%m.%Y')
+    latestEasting = df['Easting'].iloc[-1]
+    latestNorthing = df['Northing'].iloc[-1]
+    latestElevation = df['Elevation'].iloc[-1]
+    latestVoltage = df['VBat'].iloc[-1]
 
     # create sidebar
     if st.sidebar.button('Download raw data as CSV'):
@@ -101,23 +123,26 @@ def main():
 
     if st.sidebar.checkbox('Show Overview Map'):
         st.sidebar.subheader('Overview map')
+        dfCoordinates = pd.DataFrame({'longitude': [df['longitude'].iloc[-1]], 'latitude': [df['latitude'].iloc[-1]]})
         st.sidebar.pydeck_chart(pdk.Deck(
             map_style='mapbox://styles/mapbox/satellite-streets-v11',
             initial_view_state=pdk.ViewState(
-                latitude=np.mean(df['latitude']),
-                longitude=np.mean(df['longitude']),
+                latitude=df['latitude'].iloc[-1],
+                longitude=df['longitude'].iloc[-1],
                 zoom=14,
             ),
+            tooltip={"html": "<b>GPS ID:</b> {gpsNo}", "style": {"color": "red"}},
             layers=[
                 pdk.Layer(
                     'ScatterplotLayer',
-                    data=df,
+                    data=dfCoordinates,
                     get_position='[longitude, latitude]',
-                    get_color='[200, 30, 0, 160]',
+                    get_color='[200, 30, 0]',
                     get_radius=20,
                 ),
             ],
-        ))
+            height=100
+            ))
 
 
     st.sidebar.subheader('Plot options')
@@ -130,10 +155,47 @@ def main():
     # create main windows layout
     st.title('Geomon GPS Network')
     st.header(str(gpsSite) + ": " + gpsNo)
-    st.subheader("Latest update: " + latestUpdate)
+    st.markdown("**Latest data**: " + latestUpdate + " | " + str(round(latestEasting,2)) + " m, " + str(round(latestNorthing,2)) + " m | " + str(round(latestElevation,2)) + " m | " + str(round(latestVoltage,2)) + " V")
 
+    if st.sidebar.checkbox('Enable outlier filtering (experimental)'):
+        st.sidebar.subheader('Filtering options')
+        st.sidebar.markdown("For filtering outliers a Hampel filter is used to identify and remove outliers. "
+                            "The filter is basically a configurable-width sliding window that we slide across the "
+                            "time series. For each window, the filter calculates the median and estimates the window’s "
+                            "standard deviation 𝜎 using the median absolute deviation: 𝜎≈1.4826 MAD. For any point in "
+                            "the window, if it is more than 3𝜎 out from the window’s median, then the Hampel filter "
+                            "identifies the point as an outlier and removes it from the time series. The sliding window "
+                            "size can be configured below and takes into account the neighbors on either side of the "
+                            "sample", unsafe_allow_html=True)
+        filterWindowSizeEasting = st.sidebar.slider('Set window size Easting',
+                          1, 50, (5))
+        df['Easting'] = hampel(df['Easting'], filterWindowSizeEasting, t0=3)
+        filterWindowSizeNorthing = st.sidebar.slider('Set window size Northing',
+                                                    1, 50, (5))
+        df['Northing'] = hampel(df['Northing'], filterWindowSizeNorthing, t0=3)
+        filterWindowSizeElevation = st.sidebar.slider('Set window size Elevation',
+                                                    1, 50, (5))
+        df['Elevation'] = hampel(df['Elevation'], filterWindowSizeElevation, t0=3)
+        if st.sidebar.button('Download filtered data as CSV'):
+            tmp_download_link_filtered = download_link(df, "Data_Filtered_" + gpsSite + "_" + gpsNo + ".csv",
+                                              'Click here to download your data!')
+            st.sidebar.markdown(tmp_download_link_filtered, unsafe_allow_html=True)
+
+    dfDistance = df.replace('null', np.NaN)
+
+    # calculate 3d distance
+    x1 = np.nanmedian(dfDistance['Easting'].iloc[0:5].astype(float))
+    x2 = np.nanmedian(dfDistance['Easting'].iloc[-5:].astype(float))
+    y1 = np.nanmedian(dfDistance['Northing'].iloc[0:5])
+    y2 = np.nanmedian(dfDistance['Northing'].iloc[-5:])
+    z1 = np.nanmedian(dfDistance['Elevation'].iloc[0:5])
+    z2 = np.nanmedian(dfDistance['Elevation'].iloc[-5:])
+    distance3D = np.sqrt((x2-x1)**2 +(y2-y1)**2 + (z2-z1)**2)
+    firstDate = df['DateString'].iloc[0]
+    lastDate = df['DateString'].iloc[-1]
+    distance3DString = str(round(distance3D, 2))
+    st.markdown("**Calculated 3D distance**: "  + distance3DString + " m (" +firstDate + "-" + lastDate +")")
     # create plots
-
     st.subheader('Easting')
     scatter_chart = st.altair_chart(
         alt.Chart(df)
@@ -201,6 +263,34 @@ def main():
                 height=250)
             .interactive()
     ,  use_container_width= True)
+
+    if st.sidebar.checkbox('Show detailed map view'):
+        st.subheader('Map View')
+        st.markdown('The map view does not yet show excluded outliers. A custom high resolution base map is '
+                    'planned in a future release.')
+        # Define a layer to display on a map
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            df,
+            pickable=True,
+            opacity=0.8,
+            #stroked=True,
+            filled=True,
+            radius_scale=2,
+            radius_min_pixels=1,
+            radius_max_pixels=5,
+            line_width_min_pixels=0.01,
+            get_position='[longitude, latitude]',
+            get_fill_color=[255, 140, 0],
+            get_line_color=[0, 0, 0],
+        )
+
+        # Set the viewport location
+        view_state = pdk.ViewState(latitude=df['latitude'].iloc[-1], longitude=df['longitude'].iloc[-1], zoom=23, min_zoom= 10, max_zoom=30)
+
+        # Render
+        r = pdk.Deck(layers=[layer], map_style='mapbox://styles/mapbox/satellite-streets-v11', initial_view_state=view_state, tooltip={"html": "<b>Date:</b> {DateString} <br /> <b>Easting: </b> {Easting} <br /> <b>Northing: </b>{Northing}"})
+        r
 
     st.sidebar.markdown('This app is **in a developing/prototyping  stage**.')
     st.sidebar.markdown('For questions and suggestions: <a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>', unsafe_allow_html=True)
