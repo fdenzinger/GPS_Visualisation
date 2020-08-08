@@ -72,7 +72,8 @@ def hampel(vals_orig, k=7, t0=3):
 
 def main():
     # create selection box in sidebar with stations to choose from
-    st.sidebar.title('Site Selection')
+    st.sidebar.title('Settings')
+    st.sidebar.subheader('Site selection')
     gpsSelector = st.sidebar.selectbox(
         "Select site and GPS device",
         ("Grueebu: GPS 1",
