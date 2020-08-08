@@ -157,7 +157,8 @@ def main():
     st.header(str(gpsSite) + ": " + gpsNo)
     st.markdown("**Latest data**: " + latestUpdate + " | " + str(round(latestEasting,2)) + " m, " + str(round(latestNorthing,2)) + " m | " + str(round(latestElevation,2)) + " m | " + str(round(latestVoltage,2)) + " V")
 
-    if st.sidebar.checkbox('Enable outlier filtering (experimental)'):
+    st.sidebar.subheader('Additional options (experimental)')
+    if st.sidebar.checkbox('Enable outlier filtering'):
         st.sidebar.subheader('Filtering options')
         st.sidebar.markdown("For filtering outliers a Hampel filter is used to identify and remove outliers. "
                             "The filter is basically a configurable-width sliding window that we slide across the "
@@ -292,6 +293,7 @@ def main():
         r = pdk.Deck(layers=[layer], map_style='mapbox://styles/mapbox/satellite-streets-v11', initial_view_state=view_state, tooltip={"html": "<b>Date:</b> {DateString} <br /> <b>Easting: </b> {Easting} <br /> <b>Northing: </b>{Northing}"})
         r
 
+    st.sidebar.subheader('Impressum')
     st.sidebar.markdown('This app is **in a developing/prototyping  stage**.')
     st.sidebar.markdown('For questions and suggestions: <a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>', unsafe_allow_html=True)
     st.sidebar.markdown('Data and GPS models from <a href = "http://www.infrasurvey.ch/geomon/index.php/produits/?lang=en">InfraSurvey</a>', unsafe_allow_html=True)
