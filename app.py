@@ -74,6 +74,7 @@ def main():
     # create selection box in sidebar with stations to choose from
     st.sidebar.title('Settings and tools')
     st.sidebar.subheader('Site selection')
+    st.sidebar.markdown('Select your site and the corresponding GPS device in the list below.')
     gpsSelector = st.sidebar.selectbox(
         "Select site and GPS device",
         ("Grueebu: GPS 1",
@@ -118,32 +119,36 @@ def main():
     latestVoltage = df['VBat'].iloc[-1]
 
     # create sidebar
-    if st.sidebar.button('Download raw data as CSV'):
-        tmp_download_link = download_link(df, "Data_" + gpsSite + "_" + gpsNo + ".csv", 'Click here to download your data!')
-        st.sidebar.markdown(tmp_download_link, unsafe_allow_html=True)
 
-    if st.sidebar.checkbox('Show Overview Map'):
-        st.sidebar.subheader('Overview map')
-        dfCoordinates = pd.DataFrame({'longitude': [df['longitude'].iloc[-1]], 'latitude': [df['latitude'].iloc[-1]]})
-        st.sidebar.pydeck_chart(pdk.Deck(
-            map_style='mapbox://styles/mapbox/satellite-streets-v11',
-            initial_view_state=pdk.ViewState(
-                latitude=df['latitude'].iloc[-1],
-                longitude=df['longitude'].iloc[-1],
-                zoom=14,
+    st.sidebar.subheader('Overview map')
+    dfCoordinates = pd.DataFrame({'longitude': [df['longitude'].iloc[-1]], 'latitude': [df['latitude'].iloc[-1]]})
+    st.sidebar.pydeck_chart(pdk.Deck(
+        map_style='mapbox://styles/bafu-df/ckdmyi1mh3jer1ipcqt2x55s1',
+        mapbox_key='pk.eyJ1IjoiYmFmdS1kZiIsImEiOiJja2RteTIybGUxY3Z5MnhxMzJ6eTFkOXdqIn0.3lhLCtp3isEn6j1eObbLoQ',
+        initial_view_state=pdk.ViewState(
+            latitude=df['latitude'].iloc[-1],
+            longitude=df['longitude'].iloc[-1],
+            zoom=14,
+        ),
+        tooltip={"html": "<b>GPS ID:</b> {gpsNo}", "style": {"color": "red"}},
+        layers=[
+            pdk.Layer(
+                'ScatterplotLayer',
+                data=dfCoordinates,
+                get_position='[longitude, latitude]',
+                get_color='[200, 30, 0]',
+                get_radius=20,
             ),
-            tooltip={"html": "<b>GPS ID:</b> {gpsNo}", "style": {"color": "red"}},
-            layers=[
-                pdk.Layer(
-                    'ScatterplotLayer',
-                    data=dfCoordinates,
-                    get_position='[longitude, latitude]',
-                    get_color='[200, 30, 0]',
-                    get_radius=20,
-                ),
-            ],
-            height=100
-            ))
+        ],
+        height=100,
+        ))
+
+    st.sidebar.subheader('Data download')
+    st.sidebar.markdown('Raw data can be downloaded as a .csv file via the button below.')
+    if st.sidebar.button('Download raw data as CSV'):
+        tmp_download_link = download_link(df, "Data_" + gpsSite + "_" + gpsNo + ".csv",
+                                          'Click here to download your data!')
+        st.sidebar.markdown(tmp_download_link, unsafe_allow_html=True)
 
     st.sidebar.subheader('Plot options')
     st.sidebar.markdown('Define plot options such as a specified date range or the point size for all plots in this '
@@ -160,10 +165,12 @@ def main():
     st.markdown("**Latest data**: " + latestUpdate + " | " + str(round(latestEasting,2)) + " m, " + str(round(latestNorthing,2)) + " m | " + str(round(latestElevation,2)) + " m | " + str(round(latestVoltage,2)) + " V")
 
     st.sidebar.subheader('Additional options (experimental)')
+    st.sidebar.markdown('The following options can be used to detect outlier in the data and to show a detailed map'
+                        'view of the GPS data. These tools are still under development.')
     if st.sidebar.checkbox('Enable outlier filtering'):
-        st.sidebar.subheader('Filtering options')
+        st.sidebar.subheader('Outlier filter')
         st.sidebar.markdown("For filtering outliers a Hampel filter is used to identify and remove outliers. "
-                            "The filter is basically a configurable-width sliding window that we slide across the "
+                            "The filter is a configurable-width sliding window that we slide across the "
                             "time series. For each window, the filter calculates the median and estimates the window’s "
                             "standard deviation 𝜎 using the median absolute deviation: 𝜎≈1.4826 MAD. For any point in "
                             "the window, if it is more than 3𝜎 out from the window’s median, then the Hampel filter "
@@ -179,6 +186,7 @@ def main():
         filterWindowSizeElevation = st.sidebar.slider('Set window size Elevation',
                                                     1, 50, (5))
         df['Elevation'] = hampel(df['Elevation'], filterWindowSizeElevation, t0=3)
+        st.sidebar.markdown('Filtered data can be downloaded as a .csv file via the button below.')
         if st.sidebar.button('Download filtered data as CSV'):
             tmp_download_link_filtered = download_link(df, "Data_Filtered_" + gpsSite + "_" + gpsNo + ".csv",
                                               'Click here to download your data!')
@@ -293,7 +301,8 @@ def main():
         view_state = pdk.ViewState(latitude=df['latitude'].iloc[-1], longitude=df['longitude'].iloc[-1], zoom=23, min_zoom= 10, max_zoom=30)
 
         # Render
-        r = pdk.Deck(layers=[layer], map_style='mapbox://styles/mapbox/satellite-streets-v11',
+        r = pdk.Deck(layers=[layer], map_style='mapbox://styles/bafu-df/ckdmyi1mh3jer1ipcqt2x55s1',
+                     mapbox_key='pk.eyJ1IjoiYmFmdS1kZiIsImEiOiJja2RteTIybGUxY3Z5MnhxMzJ6eTFkOXdqIn0.3lhLCtp3isEn6j1eObbLoQ',
                      initial_view_state=view_state, tooltip={"html": "<b>Date:</b> {DateString} "
                                                                      "<br /> <b>Easting: </b> {Easting} <br /> "
                                                                      "<b>Northing: </b>{Northing} <br /> "
@@ -302,11 +311,11 @@ def main():
 
     # Distance calculator
     st.sidebar.subheader('Distance calculator (experimental)')
-    st.sidebar.markdown('With this calculator you can calculate the 3D distance for a user specified date interval')
+    st.sidebar.markdown('With this calculator you can calculate the 3D distance for a user specified date range.')
     startDateDistance = st.sidebar.date_input('Enter start date', min(df['Date']))
     endDateDistance = st.sidebar.date_input('Enter end date', max(df['Date']))
 
-    if st.sidebar.button('Calculate 3D distance'):
+    if st.sidebar.button('Click to calculate 3D distance'):
         startDateRange = pd.date_range(startDateDistance, periods=5, freq='D')
         start = startDateRange[0]
         end = startDateRange[-1]
@@ -331,7 +340,12 @@ def main():
         distance3DStringCalc = str(round(distance3DCalc, 2))
         st.sidebar.markdown("3D distance is: " + distance3DStringCalc + " m (" +
                             startDateDistance.strftime('%d.%m.%Y') + "-" + endDateDistance.strftime('%d.%m.%Y') + ")")
-
+    st.sidebar.markdown('The formula that was used to calculate the 3D distance is as follows: ')
+    st.sidebar.markdown('$\sqrt{(x_2-x_1)^2 + (y_2-y_1)^2 + (z_2-z_1)^2}$')
+    st.sidebar.markdown('$x$ is the Easting coordinate, '
+                        '$y$ is the Northing coordinate and $z$ is the Elevation. We take the first 5 '
+                        'and last 5 values over the date range and calculate the median. Therefore the calculation '
+                        'is less susceptible to outliers.')
     st.sidebar.subheader('Impressum')
     st.sidebar.markdown('This app is **in a developing/prototyping  stage**. For questions and suggestions: '
                         '<a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>. Data and GPS models '
