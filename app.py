@@ -72,7 +72,7 @@ def hampel(vals_orig, k=7, t0=3):
 
 def main():
     # create selection box in sidebar with stations to choose from
-    st.sidebar.title('Settings')
+    st.sidebar.title('Settings and tools')
     st.sidebar.subheader('Site selection')
     gpsSelector = st.sidebar.selectbox(
         "Select site and GPS device",
@@ -145,10 +145,11 @@ def main():
             height=100
             ))
 
-
     st.sidebar.subheader('Plot options')
-    start_date = st.sidebar.date_input('Start date', min(df['Date']) - pd.Timedelta(days=5))
-    end_date = st.sidebar.date_input('End date', max(df['Date'])+ pd.Timedelta(days=5))
+    st.sidebar.markdown('Define plot options such as a specified date range or the point size for all plots in this '
+                        'section.')
+    start_date = st.sidebar.date_input('Enter start date', min(df['Date']) - pd.Timedelta(days=5))
+    end_date = st.sidebar.date_input('Enter end date', max(df['Date'])+ pd.Timedelta(days=5))
     markerSize = st.sidebar.slider(
         'Set marker size',
         10, 200, (60))
@@ -197,6 +198,7 @@ def main():
     lastDate = df['DateString'].iloc[-1]
     distance3DString = str(round(distance3D, 2))
     st.markdown("**Calculated 3D distance**: "  + distance3DString + " m (" +firstDate + "-" + lastDate +")")
+
     # create plots
     st.subheader('Easting')
     scatter_chart = st.altair_chart(
@@ -291,13 +293,50 @@ def main():
         view_state = pdk.ViewState(latitude=df['latitude'].iloc[-1], longitude=df['longitude'].iloc[-1], zoom=23, min_zoom= 10, max_zoom=30)
 
         # Render
-        r = pdk.Deck(layers=[layer], map_style='mapbox://styles/mapbox/satellite-streets-v11', initial_view_state=view_state, tooltip={"html": "<b>Date:</b> {DateString} <br /> <b>Easting: </b> {Easting} <br /> <b>Northing: </b>{Northing}"})
+        r = pdk.Deck(layers=[layer], map_style='mapbox://styles/mapbox/satellite-streets-v11',
+                     initial_view_state=view_state, tooltip={"html": "<b>Date:</b> {DateString} "
+                                                                     "<br /> <b>Easting: </b> {Easting} <br /> "
+                                                                     "<b>Northing: </b>{Northing} <br /> "
+                                                                     "<b> Elevation: </b>{Elevation}"})
         r
 
+    # Distance calculator
+    st.sidebar.subheader('Distance calculator (experimental)')
+    st.sidebar.markdown('With this calculator you can calculate the 3D distance for a user specified date interval')
+    startDateDistance = st.sidebar.date_input('Enter start date', min(df['Date']))
+    endDateDistance = st.sidebar.date_input('Enter end date', max(df['Date']))
+
+    if st.sidebar.button('Calculate 3D distance'):
+        startDateRange = pd.date_range(startDateDistance, periods=5, freq='D')
+        start = startDateRange[0]
+        end = startDateRange[-1]
+        indexStartDate = np.where(np.logical_and(dfDistance['Date'] >= start, dfDistance['Date'] <= end))
+        endDateRange = pd.date_range(endDateDistance, periods=5, freq='D')[::-1]
+        start = endDateRange[-1]
+        endDateRange = pd.date_range(start, periods=5, freq='D')
+        start = endDateRange[0]
+        end = endDateRange[-1]
+        # make sure that always 5 last values are selected
+        # get index of date
+        # subtract index - 5
+        indexEndDate = np.where(np.logical_and(dfDistance['Date'] >= start, dfDistance['Date'] <= end))
+
+        x1Calc = np.nanmedian(dfDistance['Easting'].iloc[indexStartDate].astype(float))
+        x2Calc = np.nanmedian(dfDistance['Easting'].iloc[indexEndDate].astype(float))
+        y1Calc = np.nanmedian(dfDistance['Northing'].iloc[indexStartDate])
+        y2Calc = np.nanmedian(dfDistance['Northing'].iloc[indexEndDate])
+        z1Calc = np.nanmedian(dfDistance['Elevation'].iloc[indexStartDate])
+        z2Calc = np.nanmedian(dfDistance['Elevation'].iloc[indexEndDate])
+        distance3DCalc = np.sqrt((x2Calc - x1Calc) ** 2 + (y2Calc - y1Calc) ** 2 + (z2Calc - z1Calc) ** 2)
+        distance3DStringCalc = str(round(distance3DCalc, 2))
+        st.sidebar.markdown("3D distance is: " + distance3DStringCalc + " m (" +
+                            startDateDistance.strftime('%d.%m.%Y') + "-" + endDateDistance.strftime('%d.%m.%Y') + ")")
+
     st.sidebar.subheader('Impressum')
-    st.sidebar.markdown('This app is **in a developing/prototyping  stage**.')
-    st.sidebar.markdown('For questions and suggestions: <a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>', unsafe_allow_html=True)
-    st.sidebar.markdown('Data and GPS models from <a href = "http://www.infrasurvey.ch/geomon/index.php/produits/?lang=en">InfraSurvey</a>', unsafe_allow_html=True)
+    st.sidebar.markdown('This app is **in a developing/prototyping  stage**. For questions and suggestions: '
+                        '<a href = "mailto: florian.denzinger@bafu.admin.ch">Contact</a>. Data and GPS models '
+                        'from <a href = "http://www.infrasurvey.ch/geomon/index.php/produits/?lang=en">InfraSurvey</a>.',
+                        unsafe_allow_html=True)
     st.sidebar.markdown('Webapp developed by FD, 2020')
 
     # hide hamburger and footer
