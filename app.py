@@ -15,7 +15,7 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
-## password
+## password test (dummy)
 #from SessionState import get
 #session_state = get(password='')
 
