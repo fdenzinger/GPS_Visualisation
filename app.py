@@ -302,7 +302,7 @@ def main():
 
         # Render
         r = pdk.Deck(layers=[layer], map_style='mapbox://styles/bafu-df/ckdmyi1mh3jer1ipcqt2x55s1',
-                     mapbox_key ='pk.eyJ1IjoiYmFmdS1kZiIsImEiOiJja2RtenhjaW0xZGR3MnhxM3g2NnVsajhiIn0.08NmmxCor9nqjcAuez-Ysg',
+                     mapbox_key ='',
                      initial_view_state=view_state, tooltip={"html": "<b>Date:</b> {DateString} "
                                                                      "<br /> <b>Easting: </b> {Easting} <br /> "
                                                                      "<b>Northing: </b>{Northing} <br /> "
