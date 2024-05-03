@@ -124,7 +124,7 @@ def main():
     dfCoordinates = pd.DataFrame({'longitude': [df['longitude'].iloc[-1]], 'latitude': [df['latitude'].iloc[-1]]})
     st.sidebar.pydeck_chart(pdk.Deck(
         map_style='mapbox://styles/bafu-df/ckdmyi1mh3jer1ipcqt2x55s1',
-        mapbox_key='pk.eyJ1IjoiYmFmdS1kZiIsImEiOiJja2RtenhjaW0xZGR3MnhxM3g2NnVsajhiIn0.08NmmxCor9nqjcAuez-Ysg',
+        mapbox_key='',
         initial_view_state=pdk.ViewState(
             latitude=df['latitude'].iloc[-1],
             longitude=df['longitude'].iloc[-1],
